@@ -1,0 +1,16 @@
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\bin\Debug\net9.0\p42ObjectStores.deps.json
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\bin\Debug\net9.0\p42ObjectStores.dll
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\bin\Debug\net9.0\p42ObjectStores.pdb
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\bin\Debug\net9.0\p42BaseLib.dll
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\bin\Debug\net9.0\p42BaseLib.pdb
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.csproj.AssemblyReference.cache
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.AssemblyInfoInputs.cache
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.AssemblyInfo.cs
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.csproj.CoreCompileInputs.cache
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.sourcelink.json
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42Objec.9D81C906.Up2Date
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.dll
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\refint\p42ObjectStores.dll
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\p42ObjectStores.pdb
+C:\Users\prod42\RiderProjects\p42\p42ObjectStores\p42ObjectStores\obj\Debug\net9.0\ref\p42ObjectStores.dll
