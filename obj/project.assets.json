@@ -108,7 +108,6 @@
   "projectFileDependencyGroups": {
     "net9.0": [
       "AWSSDK.S3 >= 4.0.6.4",
-      "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj",
       "p42BaseLib >= 1.0.0"
     ]
   },
@@ -137,9 +136,6 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj": {
-              "projectPath": "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj"
-            },
             "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj": {
               "projectPath": "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj"
             }
@@ -186,16 +182,5 @@
         "runtimeIdentifierGraphPath": "C:\\Users\\prod42\\.dotnet\\sdk\\9.0.303/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1104",
-      "level": "Error",
-      "message": "Unable to find project 'C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj'. Check that the project reference is valid and that the project file exists.",
-      "libraryId": "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    }
-  ]
+  }
 }

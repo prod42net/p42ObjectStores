@@ -85,9 +85,6 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj": {
-                "projectPath": "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj"
-              },
               "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj": {
                 "projectPath": "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj"
               }

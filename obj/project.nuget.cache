@@ -1,23 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "H1e0xhSqCuY=",
-  "success": false,
+  "dgSpecHash": "aStMuaFptoU=",
+  "success": true,
   "projectFilePath": "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42ObjectStores\\p42ObjectStores.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\prod42\\.nuget\\packages\\awssdk.core\\4.0.0.21\\awssdk.core.4.0.0.21.nupkg.sha512",
     "C:\\Users\\prod42\\.nuget\\packages\\awssdk.s3\\4.0.6.4\\awssdk.s3.4.0.6.4.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1104",
-      "level": "Error",
-      "message": "Unable to find project 'C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj'. Check that the project reference is valid and that the project file exists.",
-      "projectPath": "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42ObjectStores\\p42ObjectStores.csproj",
-      "filePath": "C:\\Users\\prod42\\RiderProjects\\p42FactoryReporting\\p42ObjectStores\\p42ObjectStores.csproj",
-      "libraryId": "C:\\Users\\prod42\\RiderProjects\\p42BaseLib\\p42BaseLib\\p42BaseLib.csproj",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    }
-  ]
+  "logs": []
 }
