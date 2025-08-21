@@ -19,7 +19,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
+   
+      <ProjectReference Include="..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
     </ItemGroup>
 
 </Project>
