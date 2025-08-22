@@ -18,7 +18,10 @@
       <PackageReference Include="AWSSDK.S3" Version="4.0.6.4" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
+      <ProjectReference Include="..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="obj\Debug\net9.0\" />
     </ItemGroup>
 
 </Project>
