@@ -11,9 +11,12 @@ Lightweight helpers to access simple blob/object stores (AWS S3, DigitalOcean Sp
 
 ## Overview
 
-p42ObjectStores provides small, focused utilities to simplify working with object/blob stores (for example: AWS S3 or S3-compatible hosts such as DigitalOcean Spaces). It is intended to be lightweight and to integrate easily with existing .NET applications.
+p42ObjectStores provides small, focused utilities to simplify working with object/blob stores (for example: AWS S3 or
+S3-compatible hosts such as DigitalOcean Spaces). It is intended to be lightweight and to integrate easily with existing
+.NET applications.
 
-This library depends on the official AWS S3 SDK for .NET and a shared internal base library used across related projects.
+This library depends on the official AWS S3 SDK for .NET and a shared internal base library used across related
+projects.
 
 ## Features
 
@@ -38,4 +41,5 @@ Or add the project to your solution and reference the project directly.
 
 ## Quick Start
 
-Below is a minimal illustrative example showing the general idea of usage with an S3-compatible client. Adapt to your concrete API surface provided by this library.
+Below is a minimal illustrative example showing the general idea of usage with an S3-compatible client. Adapt to your
+concrete API surface provided by this library.

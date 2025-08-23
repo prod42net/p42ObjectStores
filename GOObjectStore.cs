@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using p42BaseLib;
-
-
 
 namespace p42ObjectStores;
 
 public class GOObjectStore : BaseStore
 {
-    P42Logger _logger = new();
-    string _accessKey;
-    string _secretKey;
-    string _serviceUrl;
-    string _bucketName;
+    readonly string _accessKey;
+    readonly string _bucketName;
     AmazonS3Client? _client;
+    readonly P42Logger _logger = new();
+    readonly string _secretKey;
+    readonly string _serviceUrl;
 
 
     public GOObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
@@ -37,13 +32,9 @@ public class GOObjectStore : BaseStore
             ServiceURL = _serviceUrl
         });
         if (_client == null)
-        {
             _logger.Info("GOObjectStore creation failed");
-        }
         else
-        {
             _logger.Info("GOObjectStore created");
-        }
     }
 
     public override int NumberOfObject(string? prefix = null)
@@ -53,20 +44,17 @@ public class GOObjectStore : BaseStore
         try
         {
             int total = 0;
-            var request = new ListObjectsV2Request
+            ListObjectsV2Request request = new()
             {
                 BucketName = _bucketName,
-                Prefix = prefix,
+                Prefix = prefix
             };
 
             ListObjectsV2Response response;
             do
             {
                 response = _client.ListObjectsV2Async(request).GetAwaiter().GetResult();
-                if (response?.S3Objects != null)
-                {
-                    total += response.S3Objects.Count;
-                }
+                if (response?.S3Objects != null) total += response.S3Objects.Count;
 
                 request.ContinuationToken = response?.NextContinuationToken;
             } while ((bool)response.IsTruncated!);
@@ -82,7 +70,7 @@ public class GOObjectStore : BaseStore
 
     public override async Task<List<T>> GetAll<T>(string name = "", string? prefix = null)
     {
-        var results = new List<T>();
+        List<T> results = new();
 
         try
         {
@@ -90,18 +78,14 @@ public class GOObjectStore : BaseStore
 
             // Build listing prefix (treating 'name' as a subfolder or key prefix under the optional 'prefix')
             string listPrefix;
-            if (string.IsNullOrWhiteSpace(prefix))
-            {
-                listPrefix = string.IsNullOrWhiteSpace(name) ? string.Empty : name;
-            }
+            if (String.IsNullOrWhiteSpace(prefix))
+                listPrefix = String.IsNullOrWhiteSpace(name) ? String.Empty : name;
             else
-            {
-                listPrefix = string.IsNullOrWhiteSpace(name)
+                listPrefix = String.IsNullOrWhiteSpace(name)
                     ? $"{prefix.TrimEnd('/')}/"
                     : $"{prefix.TrimEnd('/')}/{name}";
-            }
 
-            var request = new ListObjectsV2Request
+            ListObjectsV2Request request = new()
             {
                 BucketName = _bucketName,
                 Prefix = listPrefix
@@ -114,17 +98,15 @@ public class GOObjectStore : BaseStore
                 response = await _client.ListObjectsV2Async(request);
 
                 if (response?.S3Objects != null)
-                {
-                    foreach (var s3Obj in response.S3Objects)
-                    {
+                    foreach (S3Object? s3Obj in response.S3Objects)
                         try
                         {
-                            using var getResp = await _client.GetObjectAsync(new GetObjectRequest
+                            using GetObjectResponse? getResp = await _client.GetObjectAsync(new GetObjectRequest
                             {
                                 BucketName = _bucketName,
                                 Key = s3Obj.Key
                             });
-                            var model = await JsonSerializer.DeserializeAsync<T>(getResp.ResponseStream);
+                            T? model = await JsonSerializer.DeserializeAsync<T>(getResp.ResponseStream);
                             if (model != null)
                                 results.Add(model);
                         }
@@ -132,8 +114,6 @@ public class GOObjectStore : BaseStore
                         {
                             _logger.Info($"GOObjectStore.GetAll skipped key '{s3Obj.Key}': {exObj.Message}");
                         }
-                    }
-                }
 
                 request.ContinuationToken = response?.NextContinuationToken;
             } while (response != null && (bool)response.IsTruncated!);
@@ -153,20 +133,20 @@ public class GOObjectStore : BaseStore
             return null;
         try
         {
-            var request = new GetObjectRequest
+            GetObjectRequest request = new()
             {
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix)
             };
-            using var getResponse = await _client.GetObjectAsync(request);
+            using GetObjectResponse? getResponse = await _client.GetObjectAsync(request);
             // If we got here, the object exists. Optionally ensure 2xx.
             if ((int)getResponse.HttpStatusCode < 200 || (int)getResponse.HttpStatusCode >= 300)
                 return null;
 
-            using var reader = new StreamReader(getResponse.ResponseStream);
+            using StreamReader reader = new(getResponse.ResponseStream);
             //string content = reader.ReadToEnd();
             T? model = JsonSerializer.Deserialize<T>(await reader.ReadToEndAsync());
-            return (T?)model;
+            return model;
         }
         catch (Exception e)
         {
@@ -179,23 +159,20 @@ public class GOObjectStore : BaseStore
     {
         try
         {
-            JsonSerializerOptions? jsonOptions = new JsonSerializerOptions()
+            JsonSerializerOptions? jsonOptions = new()
             {
                 WriteIndented = true
             };
 
             string fn = GetPath(name, "", prefix);
-            PutObjectRequest request = new PutObjectRequest()
+            PutObjectRequest request = new()
             {
                 BucketName = _bucketName,
                 Key = fn,
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions)
             };
             PutObjectResponse response = await _client.PutObjectAsync(request);
-            if ((int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300)
-            {
-                return model;
-            }
+            if ((int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300) return model;
         }
         catch (Exception e)
         {
@@ -209,15 +186,15 @@ public class GOObjectStore : BaseStore
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(name) || _client == null)
+            if (String.IsNullOrWhiteSpace(name) || _client == null)
                 return false;
-            var request = new DeleteObjectRequest
+            DeleteObjectRequest request = new()
             {
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix)
             };
             _logger.Info($"Delete object [{name}] ");
-            var response = _client.DeleteObjectAsync(request).GetAwaiter().GetResult();
+            DeleteObjectResponse? response = _client.DeleteObjectAsync(request).GetAwaiter().GetResult();
             return (int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300;
         }
         catch (Exception ex)
@@ -229,25 +206,25 @@ public class GOObjectStore : BaseStore
 
     bool IsObjectExisting(string name, string? prefix = null)
     {
-        if (string.IsNullOrWhiteSpace(name) || _client == null)
+        if (String.IsNullOrWhiteSpace(name) || _client == null)
             return false;
         try
         {
-            var metaRequest = new GetObjectMetadataRequest
+            GetObjectMetadataRequest metaRequest = new()
             {
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix)
             };
             GetObjectMetadataResponse res = _client.GetObjectMetadataAsync(metaRequest).GetAwaiter().GetResult();
-            return (res.HttpStatusCode == System.Net.HttpStatusCode.OK);
+            return res.HttpStatusCode == HttpStatusCode.OK;
         }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
             _logger.Info($"GOObjectStore.Update (GetObjectMetadata) failed: {ex.Message}");
             return false;
         }
-
     }
+
     public override bool Update<T>(string name, T model, string? prefix = null) where T : class
     {
         try
@@ -260,15 +237,15 @@ public class GOObjectStore : BaseStore
 
             _logger.Info($"GOObjectStore.Update: object [{name}] is existing");
 
-            var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
-            var putRequest = new PutObjectRequest
+            JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+            PutObjectRequest putRequest = new()
             {
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix),
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions)
             };
 
-            var response = _client.PutObjectAsync(putRequest).GetAwaiter().GetResult();
+            PutObjectResponse? response = _client.PutObjectAsync(putRequest).GetAwaiter().GetResult();
             return (int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300;
         }
         catch (Exception ex)
