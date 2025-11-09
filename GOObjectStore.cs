@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Amazon.Runtime.Internal.Util;
 using Amazon.S3;
 using Amazon.S3.Model;
 using p42BaseLib;
@@ -95,25 +96,50 @@ public class GOObjectStore : BaseStore
             ListObjectsV2Response response;
             do
             {
+                _logger.Debug("start ListObjectsV2Async");
                 response = await _client.ListObjectsV2Async(request);
 
                 if (response?.S3Objects != null)
-                    foreach (S3Object? s3Obj in response.S3Objects)
+                    _logger.Debug("start foreach S3Objects");
+                foreach (S3Object? s3Obj in response.S3Objects)
+                    try
+                    {
+                        _logger.Debug("start getObjectAsync");
+                        using GetObjectResponse? getResp = await _client.GetObjectAsync(new GetObjectRequest
+                        {
+                            BucketName = _bucketName,
+                            Key = s3Obj.Key
+                        });
+
+                        T? model = default(T);
+
                         try
                         {
-                            using GetObjectResponse? getResp = await _client.GetObjectAsync(new GetObjectRequest
+                            Amazon.Runtime.ResponseMetadata md5 = getResp.ResponseMetadata;
+                            _logger.Debug($"md5 metadata {md5}");
+                            _logger.Debug($"start ResponseStream ");
+                            Stream strm = getResp.ResponseStream;
+                            if (strm != null && strm.Length > 0)
                             {
-                                BucketName = _bucketName,
-                                Key = s3Obj.Key
-                            });
-                            T? model = await JsonSerializer.DeserializeAsync<T>(getResp.ResponseStream);
-                            if (model != null)
-                                results.Add(model);
+                                _logger.Debug($"start deserialize");
+                                model = await JsonSerializer.DeserializeAsync<T>(strm);
+                                _logger.Debug($"start model created model!=null[{model != null}]");
+                            }
+                            // model = await JsonSerializer.DeserializeAsync<T>(getResp.ResponseStream);
                         }
-                        catch (Exception exObj)
+                        catch (Exception e)
                         {
-                            _logger.Info($"GOObjectStore.GetAll skipped key '{s3Obj.Key}': {exObj.Message}");
+                            _logger.Debug(
+                                $"GOObjectStore.GetAll responseStream deserialize exception '{s3Obj.Key}': {e.Message}");
                         }
+
+                        if (model != null)
+                            results.Add(model);
+                    }
+                    catch (Exception exObj)
+                    {
+                        _logger.Info($"GOObjectStore.GetAll skipped key '{s3Obj.Key}': {exObj.Message}");
+                    }
 
                 request.ContinuationToken = response?.NextContinuationToken;
             } while (response != null && (bool)response.IsTruncated!);
