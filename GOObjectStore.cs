@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Amazon.Runtime;
 using Amazon.Runtime.Internal.Util;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -164,12 +165,34 @@ public class GOObjectStore : BaseStore
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix)
             };
-            using GetObjectResponse? getResponse = await _client.GetObjectAsync(request);
+            GetObjectResponse? response = null;
+            try
+            {
+             response = await _client.GetObjectAsync(request);
+
+            }
+           
+            catch (AmazonS3Exception ex)
+            {
+                Console.WriteLine($"S3 error. StatusCode: {ex.StatusCode}, Code: {ex.ErrorCode}, Message: {ex.Message}");
+                Console.WriteLine($"RequestId: {ex.RequestId}");
+                throw;
+            }
+            catch (AmazonServiceException ex)
+            {
+                Console.WriteLine($"AWS service error. StatusCode: {ex.StatusCode}, Message: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex}");
+                throw;
+            }
             // If we got here, the object exists. Optionally ensure 2xx.
-            if ((int)getResponse.HttpStatusCode < 200 || (int)getResponse.HttpStatusCode >= 300)
+            if ((int)response.HttpStatusCode < 200 || (int)response.HttpStatusCode >= 300)
                 return null;
 
-            using StreamReader reader = new(getResponse.ResponseStream);
+            using StreamReader reader = new(response.ResponseStream);
             //string content = reader.ReadToEnd();
             T? model = JsonSerializer.Deserialize<T>(await reader.ReadToEndAsync());
             return model;
