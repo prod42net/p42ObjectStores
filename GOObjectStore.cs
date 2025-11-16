@@ -58,7 +58,7 @@ public class GOObjectStore : BaseStore
                 if (response?.S3Objects != null) total += response.S3Objects.Count;
 
                 request.ContinuationToken = response?.NextContinuationToken;
-            } while ((bool)response.IsTruncated!);
+            } while ((response!=null)&&(bool)response?.IsTruncated!);
 
             return total;
         }
