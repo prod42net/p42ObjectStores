@@ -3,7 +3,7 @@
 Lightweight helpers to access simple blob/object stores (AWS S3, DigitalOcean Spaces, etc.) from .NET.
 
 - PackageId: `p42ObjectStores`
-- Version: `1.0.0`
+- Version: `1.0.1`
 - Target framework: .NET 9.0
 - Language: C# (modern)
 - License: MIT
