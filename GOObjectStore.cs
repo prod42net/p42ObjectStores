@@ -8,7 +8,7 @@ using p42BaseLib;
 
 namespace p42ObjectStores;
 
-public class GOObjectStore : BaseStore
+public class GoObjectStore : BaseStore
 {
     readonly string _accessKey;
     readonly string _bucketName;
@@ -18,16 +18,16 @@ public class GOObjectStore : BaseStore
     readonly string _serviceUrl;
 
 
-    public GOObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
+    public GoObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
     {
         _accessKey = accessKey;
         _secretKey = secretKey;
         _serviceUrl = serviceUrl;
         _bucketName = bucketName;
-        createClient();
+        CreateClient();
     }
 
-    void createClient()
+    void CreateClient()
     {
         _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
         {
@@ -99,10 +99,10 @@ public class GOObjectStore : BaseStore
             {
                 _logger.Debug("start ListObjectsV2Async");
                 response = await _client.ListObjectsV2Async(request);
-
-                if (response?.S3Objects != null)
+                if (response == null) continue;
+                if (response.S3Objects == null) continue;
                     _logger.Debug("start foreach S3Objects");
-                foreach (S3Object? s3Obj in response.S3Objects)
+                foreach (S3Object s3Obj in response.S3Objects)
                     try
                     {
                         _logger.Debug("start getObjectAsync");
@@ -220,7 +220,7 @@ public class GOObjectStore : BaseStore
                 Key = fn,
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions)
             };
-            PutObjectResponse response = await _client.PutObjectAsync(request);
+            PutObjectResponse response = await _client?.PutObjectAsync(request)!;
             if ((int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300) return model;
         }
         catch (Exception e)
@@ -294,7 +294,8 @@ public class GOObjectStore : BaseStore
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions)
             };
 
-            PutObjectResponse? response = _client.PutObjectAsync(putRequest).GetAwaiter().GetResult();
+            PutObjectResponse? response = _client?.PutObjectAsync(putRequest).GetAwaiter().GetResult();
+            if (response == null) return false;
             return (int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300;
         }
         catch (Exception ex)

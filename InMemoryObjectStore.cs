@@ -4,7 +4,7 @@ namespace p42ObjectStores;
 
 public class InMemoryObjectStore : BaseStore
 {
-    readonly ConcurrentDictionary<string, object> _reports = new();
+    readonly ConcurrentDictionary<string, object?> _reports = new();
 
     public override int NumberOfObject(string? prefix = null)
     {
@@ -15,7 +15,7 @@ public class InMemoryObjectStore : BaseStore
     {
         string id = GetPath(name, "", prefix);
         if (String.IsNullOrEmpty(id)) return null;
-        _reports.TryGetValue(id, out object model);
+        _reports.TryGetValue(id, out object? model);
         if (model != null && typeof(T) == model.GetType())
             return (T)model;
         return null;
@@ -23,7 +23,7 @@ public class InMemoryObjectStore : BaseStore
 
     public override async Task<T?> Add<T>(T model, string name, string? prefix = null) where T : class
     {
-        if (model == null || String.IsNullOrWhiteSpace(name)) return null;
+        if (String.IsNullOrWhiteSpace(name)) return null;
 
         string id = GetPath(name, "", prefix);
         if (_reports.TryAdd(id, model)) return model;
