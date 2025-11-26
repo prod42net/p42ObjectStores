@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Title>Access to object stores like AWS.S3 or Digital Ocean</Title>
         <Copyright>prod42net</Copyright>
         <PackageProjectUrl>https://github.com/prod42net/p42ObjectStores</PackageProjectUrl>
         <PackageIcon>prod42Net_image_head.jpg</PackageIcon>
+        <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
     </PropertyGroup>
     <PropertyGroup>
         <PackageId>p42ObjectStores</PackageId>
