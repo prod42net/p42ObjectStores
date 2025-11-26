@@ -6,12 +6,15 @@
         <Title>Access to object stores like AWS.S3 or Digital Ocean</Title>
         <Copyright>prod42net</Copyright>
         <PackageProjectUrl>https://github.com/prod42net/p42ObjectStores</PackageProjectUrl>
-        <PackageIcon>prod42Net_image_head.jpg</PackageIcon>
-        <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+        <PackageIcon>prod42net.jpg</PackageIcon>
+        <TargetFrameworks>net10.0;net9.0</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageReleaseNotes>adjusted to correct dependecy lib</PackageReleaseNotes>
+        <AssemblyVersion>1.0.4</AssemblyVersion>
     </PropertyGroup>
     <PropertyGroup>
         <PackageId>p42ObjectStores</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.4</Version>
         <Authors>prod42net</Authors>
         <Company>prod42.net</Company>
         <Description>Help the access to simple blob stores like AWS.S3 or DigitalOcean Spaces</Description>
@@ -20,17 +23,14 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="AWSSDK.S3" Version="4.0.11.3" />
-        <PackageReference Include="p42BaseLib" Version="1.0.3" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
+        <PackageReference Include="p42BaseLib" Version="1.0.4" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath=""/>
-        <None Include="..\..\..\Github\prod42Net_image_head.jpg">
-            <Pack>True</Pack>
-            <PackagePath></PackagePath>
-            <Link>prod42Net_image_head.jpg</Link>
-        </None>
+        <None Include="README.md" Pack="true" PackagePath="" />
+        <None Include="prod42net.jpg" Pack="true" PackagePath="" />
+        
     </ItemGroup>
 
 </Project>
