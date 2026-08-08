@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Amazon;
 using Amazon.Runtime.Internal.Util;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -15,23 +16,40 @@ public class GOObjectStore : BaseStore
     readonly P42Logger _logger = new();
     readonly string _secretKey;
     readonly string _serviceUrl;
+    readonly string _region;
 
 
-    public GOObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
+    public GOObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName, string region = "")
     {
         _accessKey = accessKey;
         _secretKey = secretKey;
         _serviceUrl = serviceUrl;
         _bucketName = bucketName;
+        _region = region;
         createClient();
     }
 
     void createClient()
     {
-        _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+        
+        if (!string.IsNullOrWhiteSpace(_region))
         {
-            ServiceURL = _serviceUrl
-        });
+            RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(_region);
+            _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+            {
+                RegionEndpoint = endpoint,
+                ServiceURL = _serviceUrl
+            });
+        }
+        else
+        {
+            _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+            {
+                ServiceURL = _serviceUrl
+            });
+        }
+
+
         if (_client == null)
             _logger.Info("GOObjectStore creation failed");
         else
@@ -58,7 +76,7 @@ public class GOObjectStore : BaseStore
                 if (response?.S3Objects != null) total += response.S3Objects.Count;
 
                 request.ContinuationToken = response?.NextContinuationToken;
-            } while ((response!=null)&&(bool)response?.IsTruncated!);
+            } while ((response != null) && (bool)response?.IsTruncated!);
 
             return total;
         }
@@ -99,8 +117,7 @@ public class GOObjectStore : BaseStore
                 _logger.Debug("start ListObjectsV2Async");
                 response = await _client.ListObjectsV2Async(request);
 
-                if (response?.S3Objects != null)
-                    _logger.Debug("start foreach S3Objects");
+                if (response?.S3Objects != null) _logger.Debug("start foreach S3Objects");
                 foreach (S3Object? s3Obj in response.S3Objects)
                     try
                     {
@@ -133,8 +150,7 @@ public class GOObjectStore : BaseStore
                                 $"GOObjectStore.GetAll responseStream deserialize exception '{s3Obj.Key}': {e.Message}");
                         }
 
-                        if (model != null)
-                            results.Add(model);
+                        if (model != null) results.Add(model);
                     }
                     catch (Exception exObj)
                     {
@@ -155,8 +171,7 @@ public class GOObjectStore : BaseStore
 
     public override async Task<T?> Get<T>(string name, string? prefix = null) where T : class
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return null;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return null;
         try
         {
             GetObjectRequest request = new()
@@ -166,8 +181,7 @@ public class GOObjectStore : BaseStore
             };
             using GetObjectResponse? getResponse = await _client.GetObjectAsync(request);
             // If we got here, the object exists. Optionally ensure 2xx.
-            if ((int)getResponse.HttpStatusCode < 200 || (int)getResponse.HttpStatusCode >= 300)
-                return null;
+            if ((int)getResponse.HttpStatusCode < 200 || (int)getResponse.HttpStatusCode >= 300) return null;
 
             using StreamReader reader = new(getResponse.ResponseStream);
             //string content = reader.ReadToEnd();
@@ -212,8 +226,7 @@ public class GOObjectStore : BaseStore
     {
         try
         {
-            if (String.IsNullOrWhiteSpace(name) || _client == null)
-                return false;
+            if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
             DeleteObjectRequest request = new()
             {
                 BucketName = _bucketName,
@@ -232,8 +245,7 @@ public class GOObjectStore : BaseStore
 
     bool IsObjectExisting(string name, string? prefix = null)
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return false;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
         try
         {
             GetObjectMetadataRequest metaRequest = new()
