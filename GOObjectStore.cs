@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.Runtime.Internal.Util;
 using Amazon.S3;
@@ -16,23 +17,40 @@ public class GoObjectStore : BaseStore
     readonly P42Logger _logger = new();
     readonly string _secretKey;
     readonly string _serviceUrl;
+    readonly string _region;
 
 
-    public GoObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
+    public GoObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName, string region = "")
     {
         _accessKey = accessKey;
         _secretKey = secretKey;
         _serviceUrl = serviceUrl;
         _bucketName = bucketName;
+        _region = region;
         CreateClient();
     }
 
     void CreateClient()
     {
-        _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+        
+        if (!string.IsNullOrWhiteSpace(_region))
         {
-            ServiceURL = _serviceUrl
-        });
+            RegionEndpoint endpoint = RegionEndpoint.GetBySystemName(_region);
+            _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+            {
+                RegionEndpoint = endpoint,
+                ServiceURL = _serviceUrl
+            });
+        }
+        else
+        {
+            _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
+            {
+                ServiceURL = _serviceUrl
+            });
+        }
+
+
         if (_client == null)
             _logger.Info("GOObjectStore creation failed");
         else
@@ -59,7 +77,7 @@ public class GoObjectStore : BaseStore
                 if (response?.S3Objects != null) total += response.S3Objects.Count;
 
                 request.ContinuationToken = response?.NextContinuationToken;
-            } while ((response!=null)&&(bool)response?.IsTruncated!);
+            } while ((response != null) && (bool)response?.IsTruncated!);
 
             return total;
         }
@@ -99,10 +117,8 @@ public class GoObjectStore : BaseStore
             {
                 _logger.Debug("start ListObjectsV2Async");
                 response = await _client.ListObjectsV2Async(request);
-                if (response == null) continue;
-                if (response.S3Objects == null) continue;
-                    _logger.Debug("start foreach S3Objects");
-                foreach (S3Object s3Obj in response.S3Objects)
+                if (response?.S3Objects != null) _logger.Debug("start foreach S3Objects");
+                foreach (S3Object s3Obj in response?.S3Objects ?? Enumerable.Empty<S3Object>())
                     try
                     {
                         _logger.Debug("start getObjectAsync");
@@ -134,8 +150,7 @@ public class GoObjectStore : BaseStore
                                 $"GOObjectStore.GetAll responseStream deserialize exception '{s3Obj.Key}': {e.Message}");
                         }
 
-                        if (model != null)
-                            results.Add(model);
+                        if (model != null) results.Add(model);
                     }
                     catch (Exception exObj)
                     {
@@ -156,8 +171,7 @@ public class GoObjectStore : BaseStore
 
     public override async Task<T?> Get<T>(string name, string? prefix = null) where T : class
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return null;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return null;
         try
         {
             GetObjectRequest request = new()
@@ -235,8 +249,7 @@ public class GoObjectStore : BaseStore
     {
         try
         {
-            if (String.IsNullOrWhiteSpace(name) || _client == null)
-                return false;
+            if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
             DeleteObjectRequest request = new()
             {
                 BucketName = _bucketName,
@@ -255,8 +268,7 @@ public class GoObjectStore : BaseStore
 
     bool IsObjectExisting(string name, string? prefix = null)
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return false;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
         try
         {
             GetObjectMetadataRequest metaRequest = new()
