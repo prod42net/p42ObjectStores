@@ -20,8 +20,8 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="AWSSDK.S3" Version="4.0.6.4"/>
-        <PackageReference Include="p42BaseLib" Version="1.0.3" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.102" />
+        <PackageReference Include="p42BaseLib" Version="1.0.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -31,6 +31,10 @@
             <PackagePath></PackagePath>
             <Link>prod42Net_image_head.jpg</Link>
         </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
     </ItemGroup>
 
 </Project>
