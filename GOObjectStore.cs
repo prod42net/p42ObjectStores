@@ -267,7 +267,7 @@ public class GoObjectStore : BaseStore
                 Key = fn,
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions),
                 UseChunkEncoding = false,
-                DisablePayloadSigning = true
+                DisablePayloadSigning = _serviceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             };
             PutObjectResponse response = await _client?.PutObjectAsync(request)!;
             if ((int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300) return model;
@@ -344,7 +344,7 @@ public class GoObjectStore : BaseStore
                 Key = GetPath(name, "", prefix),
                 ContentBody = JsonSerializer.Serialize(model, jsonOptions),
                 UseChunkEncoding = false,
-                DisablePayloadSigning = true
+                DisablePayloadSigning = _serviceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             };
 
             PutObjectResponse? response = _client?.PutObjectAsync(putRequest).GetAwaiter().GetResult();
