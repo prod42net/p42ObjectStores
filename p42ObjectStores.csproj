@@ -23,7 +23,7 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.102" />
         <PackageReference Include="p42BaseLib" Version="1.0.4" />
     </ItemGroup>
 
@@ -31,6 +31,10 @@
         <None Include="README.md" Pack="true" PackagePath="" />
         <None Include="prod42net.jpg" Pack="true" PackagePath="" />
         
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\p42BaseLib\p42BaseLib\p42BaseLib.csproj" />
     </ItemGroup>
 
 </Project>

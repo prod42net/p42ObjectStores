@@ -1,5 +1,8 @@
 ﻿using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using Amazon;
 using Amazon.Runtime;
 using Amazon.Runtime.Internal.Util;
 using Amazon.S3;
@@ -16,27 +19,73 @@ public class GoObjectStore : BaseStore
     readonly P42Logger _logger = new();
     readonly string _secretKey;
     readonly string _serviceUrl;
+    readonly string _region;
+    readonly bool _disableTlsCertificateValidation;
 
 
-    public GoObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName)
+    public GoObjectStore(string accessKey, string secretKey, string serviceUrl, string bucketName, string region = "",
+        bool disableTlsCertificateValidation = false)
     {
         _accessKey = accessKey;
         _secretKey = secretKey;
         _serviceUrl = serviceUrl;
         _bucketName = bucketName;
+        _region = region;
+        _disableTlsCertificateValidation = disableTlsCertificateValidation;
         CreateClient();
     }
 
     void CreateClient()
     {
-        _client = new AmazonS3Client(_accessKey, _secretKey, new AmazonS3Config
-        {
-            ServiceURL = _serviceUrl
-        });
+        if (!Uri.TryCreate(_serviceUrl, UriKind.Absolute, out Uri? serviceUri) ||
+            serviceUri.Scheme is not ("http" or "https"))
+            throw new ArgumentException("S3 service URL must use http or https.", nameof(_serviceUrl));
+
+        _client = new AmazonS3Client(_accessKey, _secretKey, CreateS3Config());
+
         if (_client == null)
             _logger.Info("GOObjectStore creation failed");
         else
             _logger.Info("GOObjectStore created");
+    }
+
+    AmazonS3Config CreateS3Config()
+    {
+        AmazonS3Config config = new()
+        {
+            ServiceURL = _serviceUrl,
+            AuthenticationRegion = String.IsNullOrWhiteSpace(_region) ? null : _region,
+            AuthenticationServiceName = "s3",
+            ForcePathStyle = true
+        };
+
+        _logger.Info($"GOObjectStore configured: endpoint={_serviceUrl}, bucket={_bucketName}, region={(String.IsNullOrWhiteSpace(_region) ? "default" : _region)}, accessKeySha256={GetAccessKeyFingerprint()}");
+
+        if (_disableTlsCertificateValidation)
+        {
+            _logger.Info("GOObjectStore TLS certificate validation disabled by configuration");
+            config.HttpClientFactory = new InsecureHttpClientFactory();
+        }
+
+        return config;
+    }
+
+    string GetAccessKeyFingerprint()
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(_accessKey));
+        return Convert.ToHexString(hash)[..12];
+    }
+
+    sealed class InsecureHttpClientFactory : HttpClientFactory
+    {
+        public override HttpClient CreateHttpClient(IClientConfig clientConfig)
+        {
+            HttpClientHandler handler = new()
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+            return new HttpClient(handler);
+        }
     }
 
     public override int NumberOfObject(string? prefix = null)
@@ -59,7 +108,7 @@ public class GoObjectStore : BaseStore
                 if (response?.S3Objects != null) total += response.S3Objects.Count;
 
                 request.ContinuationToken = response?.NextContinuationToken;
-            } while ((response!=null)&&(bool)response?.IsTruncated!);
+            } while ((response != null) && (bool)response?.IsTruncated!);
 
             return total;
         }
@@ -99,10 +148,8 @@ public class GoObjectStore : BaseStore
             {
                 _logger.Debug("start ListObjectsV2Async");
                 response = await _client.ListObjectsV2Async(request);
-                if (response == null) continue;
-                if (response.S3Objects == null) continue;
-                    _logger.Debug("start foreach S3Objects");
-                foreach (S3Object s3Obj in response.S3Objects)
+                if (response?.S3Objects != null) _logger.Debug("start foreach S3Objects");
+                foreach (S3Object s3Obj in response?.S3Objects ?? Enumerable.Empty<S3Object>())
                     try
                     {
                         _logger.Debug("start getObjectAsync");
@@ -134,8 +181,7 @@ public class GoObjectStore : BaseStore
                                 $"GOObjectStore.GetAll responseStream deserialize exception '{s3Obj.Key}': {e.Message}");
                         }
 
-                        if (model != null)
-                            results.Add(model);
+                        if (model != null) results.Add(model);
                     }
                     catch (Exception exObj)
                     {
@@ -156,8 +202,7 @@ public class GoObjectStore : BaseStore
 
     public override async Task<T?> Get<T>(string name, string? prefix = null) where T : class
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return null;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return null;
         try
         {
             GetObjectRequest request = new()
@@ -208,6 +253,8 @@ public class GoObjectStore : BaseStore
     {
         try
         {
+            if (_client == null) return null;
+
             JsonSerializerOptions? jsonOptions = new()
             {
                 WriteIndented = true
@@ -218,10 +265,16 @@ public class GoObjectStore : BaseStore
             {
                 BucketName = _bucketName,
                 Key = fn,
-                ContentBody = JsonSerializer.Serialize(model, jsonOptions)
+                ContentBody = JsonSerializer.Serialize(model, jsonOptions),
+                UseChunkEncoding = false,
+                DisablePayloadSigning = _serviceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             };
             PutObjectResponse response = await _client?.PutObjectAsync(request)!;
             if ((int)response.HttpStatusCode >= 200 && (int)response.HttpStatusCode < 300) return model;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            _logger.Info($"GOObjectStore.Add failed: status={(int)ex.StatusCode}, code={ex.ErrorCode}, requestId={ex.RequestId}, message={ex.Message}");
         }
         catch (Exception e)
         {
@@ -235,8 +288,7 @@ public class GoObjectStore : BaseStore
     {
         try
         {
-            if (String.IsNullOrWhiteSpace(name) || _client == null)
-                return false;
+            if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
             DeleteObjectRequest request = new()
             {
                 BucketName = _bucketName,
@@ -255,8 +307,7 @@ public class GoObjectStore : BaseStore
 
     bool IsObjectExisting(string name, string? prefix = null)
     {
-        if (String.IsNullOrWhiteSpace(name) || _client == null)
-            return false;
+        if (String.IsNullOrWhiteSpace(name) || _client == null) return false;
         try
         {
             GetObjectMetadataRequest metaRequest = new()
@@ -291,7 +342,9 @@ public class GoObjectStore : BaseStore
             {
                 BucketName = _bucketName,
                 Key = GetPath(name, "", prefix),
-                ContentBody = JsonSerializer.Serialize(model, jsonOptions)
+                ContentBody = JsonSerializer.Serialize(model, jsonOptions),
+                UseChunkEncoding = false,
+                DisablePayloadSigning = _serviceUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
             };
 
             PutObjectResponse? response = _client?.PutObjectAsync(putRequest).GetAwaiter().GetResult();
