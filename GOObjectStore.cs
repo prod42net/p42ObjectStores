@@ -16,7 +16,7 @@ public class GoObjectStore : BaseStore
     readonly string _accessKey;
     readonly string _bucketName;
     AmazonS3Client? _client;
-    readonly P42Logger _logger = new();
+    readonly P42Logger _logger = new P42Logger(true,false,true);
     readonly string _secretKey;
     readonly string _serviceUrl;
     readonly string _region;

@@ -5,7 +5,7 @@ namespace p42ObjectStores;
 
 public class BaseStore : IP42ObjectModelStore
 {
-    readonly IP42Logger _logger = new P42Logger();
+    readonly IP42Logger _logger = new P42Logger(true,false,true);
 
     public virtual int NumberOfObject(string? prefix = null)
     {
